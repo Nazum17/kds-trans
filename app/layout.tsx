@@ -6,14 +6,11 @@ import WhatsAppFloat from "./components/WhatsAppFloat";
 
 export const metadata: Metadata = {
   title: "KDS Trans – Rental Mobil & Paket Wisata Malang Terpercaya",
-  description: "KDS Trans menyediakan rental mobil dan paket wisata di Malang, Bromo, Kawah Ijen, dan seluruh Jawa Timur.",
+  description: "KDS Trans menyediakan rental mobil dan paket wisata di Malang, Bromo, Kawah Ijen, dan seluruh Jawa Timur. Armada terawat, driver berpengalaman, harga terjangkau.",
+  keywords: "rental mobil malang, paket wisata bromo, sewa mobil malang, wisata jawa timur, KDS Trans",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
       <body className="antialiased">

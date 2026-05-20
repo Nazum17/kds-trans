@@ -383,3 +383,14 @@ img { max-width: 100%; display: block; }
   .cta-box { padding: 28px 16px; }
   .cta-box h2 { font-size: 1.15rem; }
 }
+/* ===== WISATA CAROUSEL (tambahkan di paling bawah globals.css) ===== */
+
+/* Desktop: tampilkan grid, sembunyikan carousel */
+.wisata-mobile-carousel { display: none; }
+.wisata-desktop-grid    { display: block; }
+
+/* Mobile: tampilkan carousel, sembunyikan grid */
+@media (max-width: 768px) {
+  .wisata-mobile-carousel { display: block; }
+  .wisata-desktop-grid    { display: none; }
+}

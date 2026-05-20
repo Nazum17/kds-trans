@@ -244,35 +244,142 @@ img { max-width: 100%; display: block; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ===== RESPONSIVE ===== */
+
+/* Tablet (1024px ke bawah) — desktop tidak tersentuh */
 @media (max-width: 1024px) {
   .tentang-grid { grid-template-columns: 1fr; gap: 36px; }
   .wisata-hero-grid { grid-template-columns: 1fr; }
-  .layanan-grid, .cars-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .layanan-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .cars-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
+/* Mobile (768px ke bawah) — HANYA HP, desktop/laptop tidak tersentuh sama sekali */
 @media (max-width: 768px) {
+
+  /* ── NAVBAR ── */
   .hamburger { display: flex; }
   .nav-links {
-    display: none; position: absolute; top: 64px; left: 0; right: 0;
+    display: none;
+    position: absolute; top: 64px; left: 0; right: 0;
     background: white; flex-direction: column;
-    padding: 12px 16px 16px; border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow); gap: 2px;
+    padding: 16px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow); gap: 4px;
   }
   .nav-links.open { display: flex; }
   .nav-wa { display: none; }
-  .hero-content h1 { font-size: 1.9rem; }
-  .layanan-grid, .cars-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-  .footer-grid { grid-template-columns: 1fr; gap: 28px; }
-  .tentang-grid { grid-template-columns: 1fr; }
-  .cta-box { padding: 40px 24px; }
-  .steps-grid { grid-template-columns: repeat(2, 1fr); }
-  .syarat-item { padding: 20px 20px; }
-  .syarat-cta { flex-direction: column; align-items: flex-start; }
-  .flex-mobile-column { flex-direction: column !important; text-align: center; }
+
+  /* ── HERO ── */
+  .hero-content { padding: 0 20px; }
+  .hero-content h1 { font-size: 1.75rem; line-height: 1.2; }
+  .hero-content p { font-size: 0.95rem; }
+
+  /* ── PAGE HERO (halaman dalam) ── */
+  .page-hero { padding: 100px 20px 40px; }
+  .page-hero h1 { font-size: 1.6rem; }
+  .page-hero p { font-size: 0.9rem; }
+
+  /* ── CONTAINER & SECTION ── */
+  .container { padding: 0 20px; }
+  .section { padding: 48px 0; }
+  .section-header { margin-bottom: 32px; }
+  .section-header h2 { font-size: 1.5rem; }
+
+  /* ── LAYANAN GRID (beranda) ── */
+  .layanan-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  .layanan-img { height: 220px; }
+  .layanan-body { padding: 18px 20px 20px; }
+  .layanan-body h3 { font-size: 1.1rem; }
+
+  /* ── CARS GRID (rental mobil) ── */
+  .cars-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* ── WISATA CARDS ── */
+  .wisata-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .wisata-small-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .wisata-body { padding: 18px 20px 20px; }
+  .wisata-body h3 { font-size: 1rem; }
+
+  /* ── PREMIUM CARD (horizontal → vertikal) ── */
+  .flex-mobile-column {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    gap: 16px !important;
+    padding: 20px !important;
+  }
+
+  /* ── CTA BOX ── */
+  .cta-box {
+    padding: 36px 24px;
+    margin: 40px 0;
+    border-radius: var(--radius);
+  }
+  .cta-box h2 { font-size: 1.3rem; }
+  .cta-box p { font-size: 0.875rem; }
+  .btn-wa-large {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+  }
+
+  /* ── STEPS (cara pemesanan) ── */
+  .step-card { padding: 24px 16px; }
+
+  /* ── TENTANG ── */
+  .tentang-grid { grid-template-columns: 1fr; gap: 28px; }
+  .keunggulan-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .keunggulan-item { padding: 24px 20px; }
+
+  /* ── SYARAT ── */
+  .syarat-box { margin: 0; }
+  .syarat-item { padding: 20px; }
+  .syarat-cta { flex-direction: column; align-items: flex-start; gap: 14px; }
+
+  /* ── FOOTER ── */
+  .footer { padding: 40px 0 0; }
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .footer-bottom { font-size: 0.75rem; padding: 16px 0; }
+
+  /* ── WA FLOAT ── */
+  .wa-float { bottom: 20px; right: 16px; width: 50px; height: 50px; }
 }
 
+/* Small mobile (480px ke bawah) */
 @media (max-width: 480px) {
-  .steps-grid { grid-template-columns: 1fr; }
-  .wisata-small-grid { grid-template-columns: 1fr; }
-  .keunggulan-grid { grid-template-columns: 1fr; }
+  .hero-content h1 { font-size: 1.5rem; }
+  .page-hero h1 { font-size: 1.4rem; }
+  .container { padding: 0 16px; }
+
+  /* Steps tetap 2x2 di HP kecil, 1 kolom di yang sangat kecil */
+  .steps-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+  /* Foto layanan lebih pendek di HP kecil */
+  .layanan-img { height: 180px; }
+
+  /* Premium card foto lebih kecil */
+  .flex-mobile-column img { width: 100% !important; height: 160px !important; object-fit: contain !important; }
+
+  /* CTA lebih compact */
+  .cta-box { padding: 28px 16px; }
+  .cta-box h2 { font-size: 1.15rem; }
 }

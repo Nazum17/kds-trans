@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from "next/server";
+
+// Import langsung dari JSON — tidak perlu fs
+const defaultData = [
+  { id: "1",  kategori: "City Car", nama: "Honda Brio Old",               harga: 250000, hargaLabel: "Rp 250.000/hari", tipe: "Self Drive",        gambar: "/images/Brio_old.jpeg",          deskripsi: "Nyaman, irit, dan lincah. Sangat cocok untuk perjalanan santai.", aktif: true },
+  { id: "2",  kategori: "City Car", nama: "Honda Brio New",               harga: 300000, hargaLabel: "Rp 300.000/hari", tipe: "Self Drive",        gambar: "/images/Brio_new_.jpg",          deskripsi: "Generasi terbaru dengan desain lebih sporty dan kabin lebih lega.", aktif: true },
+  { id: "3",  kategori: "City Car", nama: "Daihatsu Ayla",                harga: 250000, hargaLabel: "Rp 250.000/hari", tipe: "Self Drive",        gambar: "/images/Ayla_foto.jpg",          deskripsi: "Ekonomis dan praktis. Pilihan tepat untuk perjalanan hemat harian.", aktif: true },
+  { id: "4",  kategori: "City Car", nama: "Daihatsu Ayla New",            harga: 300000, hargaLabel: "Rp 300.000/hari", tipe: "Self Drive",        gambar: "/images/Ayla_.jpeg",             deskripsi: "Versi terbaru dengan fitur modern dan efisiensi optimal.", aktif: true },
+  { id: "5",  kategori: "City Car", nama: "Toyota Raize",                 harga: 350000, hargaLabel: "Rp 350.000/hari", tipe: "Self Drive",        gambar: "/images/Toyota_raize_Foto.jpg",  deskripsi: "Compact SUV stylish dengan performa turbo, cocok untuk gaya hidup dinamis.", aktif: true },
+  { id: "6",  kategori: "City Car", nama: "Daihatsu Rocky",               harga: 350000, hargaLabel: "Rp 350.000/hari", tipe: "Self Drive",        gambar: "/images/Rocky_Foto.jpg",         deskripsi: "SUV dengan ground clearance tinggi, siap menemani petualangan Anda.", aktif: true },
+  { id: "7",  kategori: "MPV",      nama: "Toyota Avanza (Grand Facelift)",harga: 350000, hargaLabel: "Rp 350.000/hari", tipe: "Self Drive/Driver", gambar: "/images/Avanza_Ground_Foto.jpg", deskripsi: "Mobil keluarga andalan, tangguh di segala medan Jawa Timur.", aktif: true },
+  { id: "8",  kategori: "MPV",      nama: "Toyota All New Avanza",        harga: 400000, hargaLabel: "Rp 400.000/hari", tipe: "Self Drive/Driver", gambar: "/images/Avanza_New_Foto.jpg",    deskripsi: "Tampilan lebih modern, fitur keselamatan lengkap, kenyamanan ekstra.", aktif: true },
+  { id: "9",  kategori: "MPV",      nama: "Toyota Innova Reborn",         harga: 500000, hargaLabel: "Rp 500.000/hari", tipe: "Dengan Driver",     gambar: "/images/Innova_Foto.jpg",        deskripsi: "Premium MPV dengan kenyamanan kelas atas untuk jarak jauh.", aktif: true },
+  { id: "10", kategori: "MPV",      nama: "Hyundai Stargazer",            harga: 400000, hargaLabel: "Rp 400.000/hari", tipe: "Self Drive/Driver", gambar: "/images/Stargazer.jpeg",         deskripsi: "Interior sangat lapang dan desain futuristik untuk keluarga.", aktif: true },
+  { id: "11", kategori: "Premium",  nama: "Toyota Fortuner",              harga: 1000000,hargaLabel: "Rp 1.000.000/hari",tipe: "Dengan Driver",    gambar: "/images/Fortuner_Foto.jpg",      deskripsi: "SUV tangguh dan prestisius. Nyaman untuk medan wisata berat sekalipun.", aktif: true },
+  { id: "12", kategori: "Premium",  nama: "Mitsubishi Pajero",            harga: 1500000,hargaLabel: "Rp 1.500.000/hari",tipe: "Dengan Driver",    gambar: "/images/Pajero_Foto.jpg",        deskripsi: "Performa off-road andal dengan kabin mewah untuk perjalanan jauh.", aktif: true },
+  { id: "13", kategori: "Premium",  nama: "Toyota Alphard",               harga: 3500000,hargaLabel: "Rp 3.500.000/hari",tipe: "Dengan Driver",    gambar: "/images/Alphard_Foto.jpg",       deskripsi: "Simbol kemewahan. Captain seat, suspensi empuk, ketenangan kabin premium.", aktif: true },
+  { id: "14", kategori: "Premium",  nama: "Hiace Commuter",               harga: 0,      hargaLabel: "Hubungi Kami",    tipe: "Dengan Driver",     gambar: "/images/Hiace_Commuter_Foto.jpg",deskripsi: "Kapasitas besar 14-15 seat. Solusi tepat untuk rombongan.", aktif: true },
+  { id: "15", kategori: "Premium",  nama: "Hiace Luxury",                 harga: 1000000,hargaLabel: "Rp 1.000.000/hari",tipe: "Dengan Driver",    gambar: "/images/Hiace_Premio_Foto.jpg",  deskripsi: "Desain eropa lebih mewah, suspensi empuk, kapasitas 11-14 seat.", aktif: true },
+  { id: "16", kategori: "Premium",  nama: "Hiace Premio Luxury",          harga: 1800000,hargaLabel: "Rp 1.800.000/hari",tipe: "Dengan Driver",    gambar: "/images/Hiace_Luxury.jpeg",      deskripsi: "Varian paling mewah. Captain seat kulit, entertainment system.", aktif: true },
+];
+
+// Simpan data di memory (persist selama server jalan)
+let armadaDB = [...defaultData];
+
+export async function GET() {
+  return NextResponse.json(armadaDB);
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const newItem = {
+    ...body,
+    id: Date.now().toString(),
+    hargaLabel: body.harga > 0 ? `Rp ${Number(body.harga).toLocaleString("id-ID")}/hari` : "Hubungi Kami",
+  };
+  armadaDB.push(newItem);
+  return NextResponse.json(newItem, { status: 201 });
+}
+
+export async function PUT(req: NextRequest) {
+  const body = await req.json();
+  const idx = armadaDB.findIndex(a => a.id === body.id);
+  if (idx === -1) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  armadaDB[idx] = {
+    ...body,
+    hargaLabel: body.harga > 0 ? `Rp ${Number(body.harga).toLocaleString("id-ID")}/hari` : "Hubungi Kami",
+  };
+  return NextResponse.json(armadaDB[idx]);
+}
+
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json();
+  armadaDB = armadaDB.filter(a => a.id !== id);
+  return NextResponse.json({ success: true });
+}

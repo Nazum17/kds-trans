@@ -1,41 +1,41 @@
 "use client";
-import { useState, useEffect } from "react";
-import { mobilData as defaultData } from "../data";
+import { useState, useEffect, useRef } from "react";
 
-type Mobil = {
+type Armada = {
   id: string; kategori: string; nama: string;
-  harga: number; tipe: string; gambar: string; aktif: boolean;
+  harga: number; hargaLabel: string; tipe: string;
+  gambar: string; deskripsi: string; aktif: boolean;
 };
 
-const STORAGE_KEY = "kds_mobil";
-const KATEGORI    = ["City Car", "MPV", "Premium"];
-const TIPE        = ["Self Drive", "Self Drive/Driver", "Dengan Driver"];
-
-const emptyForm: Omit<Mobil, "id"> = { kategori: "City Car", nama: "", harga: 0, tipe: "Self Drive", gambar: "", aktif: true };
+const KATEGORI = ["City Car", "MPV", "Premium"];
+const TIPE     = ["Self Drive", "Self Drive/Driver", "Dengan Driver"];
+const emptyForm = { kategori: "City Car", nama: "", harga: 0, tipe: "Self Drive", gambar: "", deskripsi: "", aktif: true };
 
 export default function AdminMobilPage() {
-  const [list, setList]         = useState<Mobil[]>([]);
-  const [modal, setModal]       = useState(false);
-  const [editing, setEditing]   = useState<Mobil | null>(null);
-  const [form, setForm]         = useState<Omit<Mobil, "id">>(emptyForm);
-  const [filterKat, setFilterKat] = useState("Semua");
-  const [search, setSearch]     = useState("");
-  const [toast, setToast]       = useState("");
+  const [list, setList]       = useState<Armada[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal]     = useState(false);
+  const [editing, setEditing] = useState<Armada | null>(null);
+  const [form, setForm]       = useState<typeof emptyForm>(emptyForm);
+  const [filter, setFilter]   = useState("Semua");
+  const [search, setSearch]   = useState("");
+  const [toast, setToast]     = useState("");
+  const [saving, setSaving]   = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  // Load data
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    setList(saved ? JSON.parse(saved) : defaultData);
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  function save(data: Mobil[]) {
-    setList(data);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  async function fetchData() {
+    setLoading(true);
+    const res = await fetch("/api/armada");
+    setList(await res.json());
+    setLoading(false);
   }
 
   function showToast(msg: string) {
     setToast(msg);
-    setTimeout(() => setToast(""), 2500);
+    setTimeout(() => setToast(""), 2800);
   }
 
   function openTambah() {
@@ -44,45 +44,59 @@ export default function AdminMobilPage() {
     setModal(true);
   }
 
-  function openEdit(m: Mobil) {
-    setEditing(m);
-    setForm({ kategori: m.kategori, nama: m.nama, harga: m.harga, tipe: m.tipe, gambar: m.gambar, aktif: m.aktif });
+  function openEdit(a: Armada) {
+    setEditing(a);
+    setForm({ kategori: a.kategori, nama: a.nama, harga: a.harga, tipe: a.tipe, gambar: a.gambar, deskripsi: a.deskripsi, aktif: a.aktif });
     setModal(true);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (editing) {
-      const updated = list.map(m => m.id === editing.id ? { ...editing, ...form } : m);
-      save(updated);
-      showToast("✅ Armada berhasil diupdate!");
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (data.url) {
+      setForm(f => ({ ...f, gambar: data.url }));
+      showToast("✅ Foto berhasil diupload!");
     } else {
-      const newItem: Mobil = { id: Date.now().toString(), ...form };
-      save([...list, newItem]);
-      showToast("✅ Armada baru berhasil ditambahkan!");
+      showToast("❌ " + (data.error || "Upload gagal"));
     }
-    setModal(false);
+    setUploading(false);
   }
 
-  function handleHapus(id: string) {
-    if (!confirm("Hapus armada ini?")) return;
-    save(list.filter(m => m.id !== id));
-    showToast("🗑️ Armada dihapus.");
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const payload = { ...form, harga: Number(form.harga), ...(editing ? { id: editing.id } : {}) };
+    const method = editing ? "PUT" : "POST";
+    const res = await fetch("/api/armada", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (res.ok) {
+      await fetchData();
+      setModal(false);
+      showToast(editing ? "✅ Armada berhasil diupdate!" : "✅ Armada baru ditambahkan!");
+    } else {
+      showToast("❌ Gagal menyimpan data");
+    }
+    setSaving(false);
   }
 
-  function toggleAktif(id: string) {
-    save(list.map(m => m.id === id ? { ...m, aktif: !m.aktif } : m));
+  async function handleHapus(id: string) {
+    if (!confirm("Hapus armada ini? Tidak bisa dibatalkan.")) return;
+    const res = await fetch("/api/armada", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (res.ok) { await fetchData(); showToast("🗑️ Armada dihapus."); }
   }
 
-  function resetData() {
-    if (!confirm("Reset ke data default? Semua perubahan akan hilang.")) return;
-    save(defaultData);
-    showToast("🔄 Data direset ke default.");
+  async function toggleAktif(a: Armada) {
+    await fetch("/api/armada", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...a, aktif: !a.aktif }) });
+    await fetchData();
   }
 
   const filtered = list
-    .filter(m => filterKat === "Semua" || m.kategori === filterKat)
-    .filter(m => m.nama.toLowerCase().includes(search.toLowerCase()));
+    .filter(a => filter === "Semua" || a.kategori === filter)
+    .filter(a => a.nama.toLowerCase().includes(search.toLowerCase()));
 
   const katColor: Record<string, { bg: string; color: string }> = {
     "City Car": { bg: "#eff6ff", color: "#1d4ed8" },
@@ -91,110 +105,94 @@ export default function AdminMobilPage() {
   };
 
   return (
-    <div style={{ padding: "32px" }}>
-      {/* Toast */}
+    <div style={{ padding: "32px", animation: "fadeUp 0.4s ease both" }}>
       {toast && (
-        <div style={{ position: "fixed", top: "24px", right: "24px", background: "#111", color: "#fff", padding: "12px 20px", borderRadius: "10px", zIndex: 9999, fontSize: "0.875rem", fontWeight: "600", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>
+        <div style={{ position: "fixed", top: "24px", right: "24px", background: "#111", color: "#fff", padding: "12px 20px", borderRadius: "10px", zIndex: 9999, fontSize: "0.875rem", fontWeight: "600", boxShadow: "0 8px 24px rgba(0,0,0,0.2)", animation: "fadeUp 0.3s ease" }}>
           {toast}
         </div>
       )}
 
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#111", marginBottom: "4px" }}>Kelola Armada Mobil</h1>
           <p style={{ color: "#6b7280", fontSize: "0.875rem" }}>{list.length} armada terdaftar</p>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={resetData} style={{ ...btnStyle, background: "#f3f4f6", color: "#374151", border: "1.5px solid #e5e7eb" }}>
-            🔄 Reset Default
-          </button>
-          <button onClick={openTambah} style={{ ...btnStyle, background: "#111", color: "#fff" }}>
-            ➕ Tambah Armada
-          </button>
-        </div>
+        <button onClick={openTambah} style={{ ...btnPrimary }}>➕ Tambah Armada</button>
       </div>
 
       {/* Filter & Search */}
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍  Cari nama armada..."
-          style={{ ...inputStyle, maxWidth: "260px" }}
-        />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍  Cari nama armada..." style={{ ...inputStyle, maxWidth: "260px" }} />
         {["Semua", ...KATEGORI].map(k => (
-          <button key={k} onClick={() => setFilterKat(k)} style={{
-            padding: "8px 16px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "600",
-            cursor: "pointer", border: "1.5px solid",
-            background: filterKat === k ? "#111" : "#fff",
-            color: filterKat === k ? "#fff" : "#374151",
-            borderColor: filterKat === k ? "#111" : "#e5e7eb",
+          <button key={k} onClick={() => setFilter(k)} style={{
+            padding: "8px 16px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer", border: "1.5px solid",
+            background: filter === k ? "#111" : "#fff", color: filter === k ? "#fff" : "#374151",
+            borderColor: filter === k ? "#111" : "#e5e7eb", transition: "all 0.2s",
           }}>{k}</button>
         ))}
       </div>
 
       {/* Table */}
       <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #f0f0f0", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "#f9fafb" }}>
-              {["Foto", "Nama Armada", "Kategori", "Harga/Hari", "Tipe", "Status", "Aksi"].map(h => (
-                <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "0.72rem", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>Tidak ada armada ditemukan.</td></tr>
-            ) : filtered.map(m => (
-              <tr key={m.id} style={{ borderTop: "1px solid #f5f5f5" }}>
-                <td style={{ padding: "10px 16px" }}>
-                  <div style={{ width: "60px", height: "42px", borderRadius: "6px", overflow: "hidden", background: "#f5f5f5" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={m.gambar} alt={m.nama} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                  </div>
-                </td>
-                <td style={{ padding: "10px 16px", fontWeight: "600", fontSize: "0.875rem", color: "#111" }}>{m.nama}</td>
-                <td style={{ padding: "10px 16px" }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", ...katColor[m.kategori] }}>
-                    {m.kategori}
-                  </span>
-                </td>
-                <td style={{ padding: "10px 16px", fontSize: "0.875rem", color: "#E8341A", fontWeight: "700" }}>
-                  {m.harga === 0 ? "Hubungi Kami" : `Rp ${m.harga.toLocaleString("id-ID")}`}
-                </td>
-                <td style={{ padding: "10px 16px", fontSize: "0.8rem", color: "#6b7280" }}>{m.tipe}</td>
-                <td style={{ padding: "10px 16px" }}>
-                  <button onClick={() => toggleAktif(m.id)} style={{
-                    fontSize: "0.72rem", padding: "4px 10px", borderRadius: "20px", cursor: "pointer", border: "none", fontWeight: "700",
-                    background: m.aktif ? "#f0fdf4" : "#f9fafb",
-                    color: m.aktif ? "#16a34a" : "#9ca3af",
-                  }}>
-                    {m.aktif ? "✓ Aktif" : "✗ Nonaktif"}
-                  </button>
-                </td>
-                <td style={{ padding: "10px 16px" }}>
-                  <div style={{ display: "flex", gap: "6px" }}>
-                    <button onClick={() => openEdit(m)} style={{ ...actionBtn }}>✏️ Edit</button>
-                    <button onClick={() => handleHapus(m.id)} style={{ ...actionBtn, borderColor: "#fecaca", color: "#dc2626" }}>🗑️ Hapus</button>
-                  </div>
-                </td>
+        {loading ? (
+          <div style={{ padding: "60px", textAlign: "center", color: "#9ca3af" }}>Memuat data...</div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f9fafb" }}>
+                {["Foto", "Nama", "Kategori", "Harga/Hari", "Tipe", "Status", "Aksi"].map(h => (
+                  <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: "0.72rem", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>Tidak ada armada ditemukan.</td></tr>
+              ) : filtered.map(a => (
+                <tr key={a.id} style={{ borderTop: "1px solid #f5f5f5", transition: "background 0.15s" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#fafafa")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "")}>
+                  <td style={{ padding: "10px 16px" }}>
+                    <div style={{ width: "60px", height: "42px", borderRadius: "6px", overflow: "hidden", background: "#f5f5f5" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={a.gambar} alt={a.nama} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                    </div>
+                  </td>
+                  <td style={{ padding: "10px 16px", fontWeight: "600", fontSize: "0.875rem", color: "#111" }}>{a.nama}</td>
+                  <td style={{ padding: "10px 16px" }}>
+                    <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", ...katColor[a.kategori] }}>{a.kategori}</span>
+                  </td>
+                  <td style={{ padding: "10px 16px", fontSize: "0.875rem", color: "#E8341A", fontWeight: "700" }}>{a.hargaLabel}</td>
+                  <td style={{ padding: "10px 16px", fontSize: "0.8rem", color: "#6b7280" }}>{a.tipe}</td>
+                  <td style={{ padding: "10px 16px" }}>
+                    <button onClick={() => toggleAktif(a)} style={{
+                      fontSize: "0.72rem", padding: "4px 10px", borderRadius: "20px", cursor: "pointer", border: "none", fontWeight: "700",
+                      background: a.aktif ? "#f0fdf4" : "#f9fafb", color: a.aktif ? "#16a34a" : "#9ca3af", transition: "all 0.2s",
+                    }}>{a.aktif ? "✓ Aktif" : "✗ Nonaktif"}</button>
+                  </td>
+                  <td style={{ padding: "10px 16px" }}>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <button onClick={() => openEdit(a)} style={actionBtn}>✏️ Edit</button>
+                      <button onClick={() => handleHapus(a.id)} style={{ ...actionBtn, borderColor: "#fecaca", color: "#dc2626" }}>🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* MODAL */}
       {modal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}>
-          <div style={{ background: "#fff", borderRadius: "20px", padding: "32px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}
+          onClick={e => { if (e.target === e.currentTarget) setModal(false); }}>
+          <div style={{ background: "#fff", borderRadius: "20px", padding: "32px", width: "100%", maxWidth: "540px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,0.25)", animation: "fadeUp 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#111", marginBottom: "24px" }}>
               {editing ? "✏️ Edit Armada" : "➕ Tambah Armada Baru"}
             </h2>
-
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                 <div style={{ gridColumn: "1/-1" }}>
                   <label style={labelStyle}>Nama Armada *</label>
                   <input required value={form.nama} onChange={e => setForm(f => ({ ...f, nama: e.target.value }))} placeholder="contoh: Honda Brio New" style={inputStyle} />
@@ -222,25 +220,51 @@ export default function AdminMobilPage() {
                     <option value="nonaktif">Nonaktif</option>
                   </select>
                 </div>
+
+                {/* Upload foto */}
                 <div style={{ gridColumn: "1/-1" }}>
-                  <label style={labelStyle}>Path Gambar <span style={{ fontWeight: 400, color: "#9ca3af" }}>contoh: /images/Brio_new_.jpg</span></label>
-                  <input value={form.gambar} onChange={e => setForm(f => ({ ...f, gambar: e.target.value }))} placeholder="/images/nama-file.jpg" style={inputStyle} />
-                  {form.gambar && (
-                    <div style={{ marginTop: "8px", width: "100px", height: "70px", borderRadius: "8px", overflow: "hidden", background: "#f5f5f5" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={form.gambar} alt="preview" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <label style={labelStyle}>Foto Armada</label>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                    <div style={{ flex: 1 }}>
+                      <input
+                        type="file" accept="image/*" ref={fileRef}
+                        onChange={handleUpload}
+                        style={{ display: "none" }}
+                      />
+                      <button type="button" onClick={() => fileRef.current?.click()}
+                        style={{ ...btnSecondary, width: "100%", marginBottom: "8px", opacity: uploading ? 0.7 : 1 }}
+                        disabled={uploading}
+                      >
+                        {uploading ? "⏳ Mengupload..." : "📁 Upload Foto"}
+                      </button>
+                      <input
+                        value={form.gambar} onChange={e => setForm(f => ({ ...f, gambar: e.target.value }))}
+                        placeholder="atau ketik path: /images/nama-file.jpg"
+                        style={{ ...inputStyle, fontSize: "0.8rem" }}
+                      />
                     </div>
-                  )}
+                    {form.gambar && (
+                      <div style={{ width: "80px", height: "60px", borderRadius: "8px", overflow: "hidden", background: "#f5f5f5", flexShrink: 0 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={form.gambar} alt="preview" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: "1/-1" }}>
+                  <label style={labelStyle}>Deskripsi *</label>
+                  <textarea required value={form.deskripsi} onChange={e => setForm(f => ({ ...f, deskripsi: e.target.value }))}
+                    placeholder="Deskripsi singkat armada..." rows={3}
+                    style={{ ...inputStyle, resize: "vertical" }} />
                 </div>
               </div>
 
               <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-                <button type="submit" style={{ ...btnStyle, background: "#111", color: "#fff", flex: 1 }}>
-                  {editing ? "✅ Simpan Perubahan" : "✅ Tambah Armada"}
+                <button type="submit" disabled={saving} style={{ ...btnPrimary, flex: 1, opacity: saving ? 0.7 : 1 }}>
+                  {saving ? "Menyimpan..." : editing ? "✅ Simpan Perubahan" : "✅ Tambah Armada"}
                 </button>
-                <button type="button" onClick={() => setModal(false)} style={{ ...btnStyle, background: "#f3f4f6", color: "#374151", border: "1.5px solid #e5e7eb" }}>
-                  Batal
-                </button>
+                <button type="button" onClick={() => setModal(false)} style={btnSecondary}>Batal</button>
               </div>
             </form>
           </div>
@@ -250,7 +274,8 @@ export default function AdminMobilPage() {
   );
 }
 
-const btnStyle: React.CSSProperties    = { padding: "10px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.875rem", cursor: "pointer", border: "none", fontFamily: "inherit" };
-const inputStyle: React.CSSProperties  = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "0.9rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
-const labelStyle: React.CSSProperties  = { display: "block", fontSize: "0.8rem", fontWeight: "600", color: "#374151", marginBottom: "6px" };
-const actionBtn: React.CSSProperties   = { fontSize: "0.75rem", padding: "5px 10px", borderRadius: "6px", border: "1.5px solid #e5e7eb", color: "#374151", background: "none", cursor: "pointer", fontFamily: "inherit" };
+const btnPrimary:   React.CSSProperties = { padding: "10px 20px", borderRadius: "8px", fontWeight: "700", fontSize: "0.875rem", cursor: "pointer", border: "none", background: "#111", color: "#fff", fontFamily: "inherit", transition: "opacity 0.2s" };
+const btnSecondary: React.CSSProperties = { padding: "10px 16px", borderRadius: "8px", fontWeight: "600", fontSize: "0.875rem", cursor: "pointer", border: "1.5px solid #e5e7eb", background: "#f9fafb", color: "#374151", fontFamily: "inherit" };
+const inputStyle:   React.CSSProperties = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "0.9rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
+const labelStyle:   React.CSSProperties = { display: "block", fontSize: "0.8rem", fontWeight: "600", color: "#374151", marginBottom: "6px" };
+const actionBtn:    React.CSSProperties = { fontSize: "0.75rem", padding: "5px 10px", borderRadius: "6px", border: "1.5px solid #e5e7eb", color: "#374151", background: "none", cursor: "pointer", fontFamily: "inherit" };

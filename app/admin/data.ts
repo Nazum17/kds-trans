@@ -25,7 +25,7 @@ export const mobilData = [
 export const wisataData = [
   { id: "1", nama: "Trip Bromo Midnight",         gambar: "/images/bromo_midnight.jpeg",              tags: "OPEN TRIP, PRIVATE TRIP", aktif: true },
   { id: "2", nama: "City Tour Malang – Batu",     gambar: "/images/Malang-Batu-trip-2.png",           tags: "",                        aktif: true },
-  { id: "3", nama: "Air Terjun Tumpak Sewu",      gambar: "/images/air-terjun-tumpak-sewu_.jpg",      tags: "TUMPAK SEWU",             aktif: true },
+  { id: "3", nama: "Air Terjun Tumpak Sewu",      gambar: "/images/air-terjun-tumpak-sewu_.jpeg",      tags: "TUMPAK SEWU",             aktif: true },
   { id: "4", nama: "Explore Kawah Ijen",          gambar: "/images/kawah-ijen_.jpeg",                 tags: "JAWATAN + IJEN, IJEN + BALURAN", aktif: true },
   { id: "5", nama: "Explore Pantai Malang Selatan", gambar: "/images/pantai-malang-selatan_.jpeg",    tags: "",                        aktif: true },
 ];

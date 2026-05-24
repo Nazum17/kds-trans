@@ -241,7 +241,130 @@ img { max-width: 100%; display: block; }
 .wa-float:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(37,211,102,0.5); }
 
 /* ===== ANIMATIONS ===== */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Keyframes ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes bouncePop {
+  0%   { opacity: 0; transform: scale(0.85) translateY(16px); }
+  60%  { opacity: 1; transform: scale(1.04) translateY(-4px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* ── Page enter ── */
+.page-enter { animation: fadeIn 0.45s ease both; }
+
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.reveal-left  { transform: translateX(-32px); }
+.reveal.reveal-right { transform: translateX(32px); }
+.reveal.reveal-scale { transform: scale(0.93); }
+.reveal.visible { opacity: 1 !important; transform: none !important; }
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.16s; }
+.reveal-delay-3 { transition-delay: 0.24s; }
+.reveal-delay-4 { transition-delay: 0.32s; }
+.reveal-delay-5 { transition-delay: 0.40s; }
+.reveal-delay-6 { transition-delay: 0.48s; }
+
+/* ── Card hover spring ── */
+.layanan-card {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+}
+.layanan-card:hover {
+  transform: translateY(-6px) scale(1.01) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.13) !important;
+}
+.car-card {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+}
+.car-card:hover {
+  transform: translateY(-5px) scale(1.015) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.11) !important;
+}
+.wisata-card {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+}
+.wisata-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.12) !important;
+}
+.keunggulan-item {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+}
+.keunggulan-item:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.09) !important;
+}
+.step-card {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease !important;
+}
+.step-card:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.09) !important;
+}
+
+/* ── Tombol spring ── */
+.btn-hero, .btn-wa-large, .btn-tanya, .btn-sewa {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, background 0.2s ease !important;
+}
+.btn-hero:hover     { transform: translateY(-3px) scale(1.03) !important; }
+.btn-wa-large:hover { transform: translateY(-3px) scale(1.02) !important; }
+.btn-tanya:hover    { transform: translateY(-2px) scale(1.05) !important; }
+.btn-sewa:hover     { transform: translateY(-2px) scale(1.02) !important; }
+.wa-float { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease !important; }
+.wa-float:hover { transform: scale(1.12) rotate(8deg) !important; box-shadow: 0 8px 28px rgba(37,211,102,0.5) !important; }
+
+/* ── Nav link underline slide ── */
+.nav-links a { position: relative; }
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 50%; right: 50%;
+  height: 2px; background: var(--red); border-radius: 2px;
+  transition: left 0.25s cubic-bezier(0.34,1.56,0.64,1), right 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nav-links a:hover::after,
+.nav-links a.active::after { left: 8px; right: 8px; }
+
+/* ── Hero entrance ── */
+.hero-content h1   { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+.hero-content p    { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+.hero-content .btn-hero { animation: bouncePop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.45s both; }
+
+/* ── Page hero ── */
+.page-hero h1 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.page-hero p  { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.25s both; }
+
+/* ── Section header ── */
+.section-header h2 { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+.section-header p  { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.12s both; }
+
+/* ── Syarat item hover ── */
+.syarat-item { transition: background 0.2s ease; }
+.syarat-item:hover { background: var(--bg-soft); }
+
+/* ── Footer link hover ── */
+.footer-col a { transition: color 0.2s ease, transform 0.2s ease !important; display: inline-block; }
+.footer-col a:hover { transform: translateX(4px) !important; }
+
+/* ── Wisata carousel (mobile only) ── */
+.wisata-mobile-carousel { display: none; }
+.wisata-desktop-grid    { display: block; }
+@media (max-width: 768px) {
+  .wisata-mobile-carousel { display: block; }
+  .wisata-desktop-grid    { display: none; }
+}
 
 /* ===== RESPONSIVE ===== */
 
@@ -382,15 +505,4 @@ img { max-width: 100%; display: block; }
   /* CTA lebih compact */
   .cta-box { padding: 28px 16px; }
   .cta-box h2 { font-size: 1.15rem; }
-}
-/* ===== WISATA CAROUSEL (tambahkan di paling bawah globals.css) ===== */
-
-/* Desktop: tampilkan grid, sembunyikan carousel */
-.wisata-mobile-carousel { display: none; }
-.wisata-desktop-grid    { display: block; }
-
-/* Mobile: tampilkan carousel, sembunyikan grid */
-@media (max-width: 768px) {
-  .wisata-mobile-carousel { display: block; }
-  .wisata-desktop-grid    { display: none; }
 }
